@@ -6,13 +6,13 @@
 ## Getting Started
 
 ##Dependencies
->State Management 
-    ```
-     provider: ^3.1.0 -> for state management optional
-     bloc: ^0.15.0 -> for state management optional
-    flutter_bloc: ^0.21.0 -> it works with combination of bloc
+>###State Management use anyone library betweeb Bloc and provider
+```
+ provider: ^3.1.0 -> for state management optional
+ bloc: ^0.15.0 -> for state management optional
+ flutter_bloc: ^0.21.0 -> it works with combination of bloc
    
-    ```
+ ```
  
 >Database 
 ```
@@ -40,5 +40,13 @@
   http: ^0.12.0+2 -> used for http/https request  
 ```
   
+### App Screenshots
+![atlan test](images/settings.png)
+![atlan test](images/welcome.png)
+![atlan test](images/survey1.png)
+![atlan test](images/survey2.png)
+![atlan test](images/survey_cal.png)
+![atlan test](images/survey4.png)
+![atlan test](images/thanks.png)
 
-  ```
+
