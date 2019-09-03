@@ -31,7 +31,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Popular Movies'),
+        title: Text('Personal Information Survey'),
       ),
       body: StreamBuilder(
         stream: bloc.allData,
