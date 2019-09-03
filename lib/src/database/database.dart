@@ -17,7 +17,6 @@ class DBProvider {
 
   static final DBProvider db = DBProvider._();
 
-
   Database _database;
 
   Future<Database> get database async {
@@ -64,26 +63,24 @@ class DBProvider {
   initDB() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, "AtlanDB.db");
-    print(path);
     Database database = await openDatabase(path, version: 1,
         onCreate: (Database db, int version) async {
       // When creating the db, create the table
       //To save API Data
-      await db
-          .execute('CREATE TABLE IF NOT EXISTS  API_Data (id TEXT PRIMARY KEY, title TEXT)');
+      await db.execute(
+          'CREATE TABLE IF NOT EXISTS  API_Data (id TEXT PRIMARY KEY, title TEXT)');
 
       //To save Settings
       await db.execute(
           'CREATE TABLE IF NOT EXISTS  Settings (id INTEGER PRIMARY KEY, language TEXT, progressBar TEXT, showProgressBar BIT,apiID TEXT)');
 
       //To Save Welcome Screen data
-      await db
-          .execute('CREATE TABLE IF NOT EXISTS  Welcome (id INTEGER PRIMARY KEY, title TEXT)');
+      await db.execute(
+          'CREATE TABLE IF NOT EXISTS  Welcome (id INTEGER PRIMARY KEY, title TEXT)');
 //To Save Welcome Properties
       await db.execute(
           'CREATE TABLE IF NOT EXISTS  WelcomeProperties (id INTEGER PRIMARY KEY,description TEXT,buttonText TEXT,showButton BIT, welcomeId INTEGER)');
 
-    
       //To save Thankyou data
       await db.execute(
           'CREATE TABLE IF NOT EXISTS  ThankYou (id INTEGER PRIMARY KEY, title TEXT)');
@@ -110,7 +107,7 @@ class DBProvider {
 
       //Used to save user submitted form
       await db.execute(
-          'CREATE TABLE IF NOT EXISTS  Client (id INTEGER PRIMARY KEY, userName TEXT, email TEXT, phone TEXT, age TEXT, gender TEXT, ratings TEXT,date TEXT,revisit BIT)');
+          'CREATE TABLE IF NOT EXISTS  Survey (id INTEGER PRIMARY KEY, userName TEXT, email TEXT, phone TEXT, age TEXT, gender TEXT, ratings TEXT,date TEXT,revisit BIT)');
     });
 
     return database;
@@ -262,17 +259,10 @@ class DBProvider {
           apiModel.id,
           apiModel.title,
         ]);
-    /*Settings model = Settings(
-        language: apiModel.settings.language,
-        progressBar: apiModel.settings.progressBar,
-        showProgressBar: apiModel.settings.showProgressBar);
-*/
+
     await insertDataSettings(apiModel.settings, apiModel);
 
-    int i = 0;
     for (var object in apiModel.welcomeScreens) {
-      print("loop start");
-
       await insertWelcomeData(object, object.properties);
     }
 
@@ -283,14 +273,21 @@ class DBProvider {
     // insert Fields Data
 
     for (var object in apiModel.fields) {
-      print("loop start");
-
       await insertField(object);
     }
 
     //return raw;
   }
 
+/** 
+ * Insert Field data into Field table
+ * 
+ * * This function saves multiple Field Properties into FieldProperties table
+ *  - * and Field data in Field table
+ * 
+ * 
+ * 
+ */
   insertField(Field field) async {
     final db = await database;
 
@@ -303,7 +300,6 @@ class DBProvider {
       var tableProp = await db.rawQuery(
           "SELECT CASE WHEN id IS NOT NULL THEN MAX(id)+1 ELSE 1 END as id FROM FieldsProperties");
       int id = tableProp.first["id"];
-      //  'CREATE TABLE FieldsProperties (id INTEGER PRIMARY KEY, alphabetical_order TEXT,shape TEXT,steps INTEGER, structure TEXT, separator TEXT, fieldId TEXT)');
 
       await db.rawInsert(
           "INSERT Into FieldsProperties (id,alphabetical_order,steps,shape,structure,separator,fieldId)"
@@ -323,20 +319,22 @@ class DBProvider {
                 : "",
             field.id,
           ]);
-      if(field.properties.choices != null){
-
+      if (field.properties.choices != null) {
         for (var object in field.properties.choices) {
-          print("loop start");
-
           await insertChoices(id, object.label);
         }
-
       }
     }
   }
 
-
-  insertChoices(int fieldPropId,String label)async{
+/** 
+ * Insert choices into Choices table
+ * 
+ * - @param fieldPropId -> Pass Id of Field properties and 
+ * - @param label -> String title of choice
+ * 
+ */
+  insertChoices(int fieldPropId, String label) async {
     final db = await database;
     var tableChoices = await db.rawQuery(
         "SELECT CASE WHEN id IS NOT NULL THEN MAX(id)+1 ELSE 1 END as id FROM Choices");
@@ -344,64 +342,78 @@ class DBProvider {
 
     await db.rawInsert(
         "INSERT Into Choices (id,label,fieldPropId)"
-            " VALUES (?,?,?)",
+        " VALUES (?,?,?)",
         [
           idChoice,
-          label ,
+          label,
           fieldPropId,
         ]);
   }
 
-
 /** Function to get Settings into Settings table
  *
  * - @return List of Setting
  */
- Future<APIModel> getAPIData() async {
+  Future<APIModel> getAPIData() async {
     final db = await database;
-   var res = await db.query(Constants.API_Data);
-    APIModel list =
-        res.isNotEmpty ? res.map((c) => APIModel.fromMap(c)) : [];
+    var res = await db.query(Constants.API_Data);
+    APIModel list = res.isNotEmpty ? res.map((c) => APIModel.fromMap(c)) : [];
     return list;
 
     //return user;
   }
 
-/** Function to get Settings into Settings table
+/** get Thankyou properties on basis of thankyouid
  *
- * - @return List of Setting
+ * - @return List of Thankyou
  */
- Future<ThankyouScreenModel> getThankyouData() async {
+  getThankyouData() async {
     final db = await database;
-   var res = await db.query(Constants.ThankYou);
+    /* var res = await db.query(Constants.ThankYou);
     ThankyouScreenModel list =
         res.isNotEmpty ? res.map((c) => ThankyouScreenModel.fromMap(c)) : [];
-    return list;
-
-    //return user;
+    return list; */
+    var res = await db.query(Constants.ThankYou);
+    return res.isNotEmpty ? ThankyouScreenModel.fromMap(res.first) : null;
   }
 
-/** Function to get Settings into Settings table
- *
- * - @return List of Setting
+/**
+ * get Thankyou properties on basis of thankyouid
+ * 
  */
-/*  Future<Settings> getSettings() async {
+  getThankYouProperties(int thankyouId) async {
     final db = await database;
-   var res = await db.query(Constants.Settings);
-    Settings list =
-        res.isNotEmpty ? res.map((c) => Settings.fromMap(c)) : [];
-    return list;
+    var res = await db.query(Constants.ThankYouProperties,
+        where: "thankYouId = ?", whereArgs: [thankyouId]);
+    return res.isNotEmpty
+        ? ThankyouScreenModelProperties.fromMap(res.first)
+        : null;
+  }
 
-    //return user;
-  } */
+/**
+ * get attachment on basis of thankyou id
+ * 
+ */
+
+  getThankYouAttachment(int thankyouId) async {
+    final db = await database;
+    var res = await db.query(Constants.ThankYouAttachment,
+        where: "thankYouId = ?", whereArgs: [thankyouId]);
+    return res.isNotEmpty ? Attachment.fromMap(res.first) : null;
+  }
+/** Function to get Settings on basis of apiId
+ *
+ * - @return Setting
+ */
 
   getSettings(String apiId) async {
     final db = await database;
-    var res = await db.query("Settings", where: "apiID = ?", whereArgs: [apiId]);
+    var res =
+        await db.query("Settings", where: "apiID = ?", whereArgs: [apiId]);
     return res.isNotEmpty ? Settings.fromMap(res.first) : null;
   }
 
-/** Function to get Save user form into Client table
+/** Function to  Save Survey form into Survey table
  * - @param accept parameter of type Client
  * - @return raw response;
  */
@@ -409,11 +421,11 @@ class DBProvider {
     final db = await database;
 
     //get the biggest id in the table
-    var table = await db.rawQuery("SELECT MAX(id)+1 as id FROM Client");
+    var table = await db.rawQuery("SELECT MAX(id)+1 as id FROM Survey");
     int id = table.first["id"];
     //insert to the table using the new id
     var raw = await db.rawInsert(
-        "INSERT Into Client (id,userName,email,phone,age,gender,ratings,date,revisit)"
+        "INSERT Into Survey (id,userName,email,phone,age,gender,ratings,date,revisit)"
         " VALUES (?,?,?,?,?,?,?,?,?)",
         [
           id,
@@ -429,53 +441,15 @@ class DBProvider {
     return raw;
   }
 
-  blockOrUnblock(Client client) async {
+  getSurvey(int id) async {
     final db = await database;
-    Client blocked = Client(
-        id: client.id,
-        userName: client.userName,
-        email: client.email,
-        phone: client.phone,
-        age: client.age,
-        gender: client.gender,
-        ratings: client.ratings,
-        date: client.date,
-        revisit: !client.revisit);
-    var res = await db.update("Client", blocked.toMap(),
-        where: "id = ?", whereArgs: [client.id]);
-    return res;
-  }
-
-  updateClient(Client newClient) async {
-    final db = await database;
-    var res = await db.update("Client", newClient.toMap(),
-        where: "id = ?", whereArgs: [newClient.id]);
-    return res;
-  }
-
-  getClient(int id) async {
-    final db = await database;
-    var res = await db.query("Client", where: "id = ?", whereArgs: [id]);
+    var res = await db.query("Survey", where: "id = ?", whereArgs: [id]);
     return res.isNotEmpty ? Client.fromMap(res.first) : null;
   }
 
-  
-
-  Future<List<Client>> getBlockedClients() async {
+  Future<List<Client>> getAllSavedSurvey() async {
     final db = await database;
-
-    print("works");
-    // var res = await db.rawQuery("SELECT * FROM Client WHERE blocked=1");
-    var res = await db.query("Client", where: "blocked = ? ", whereArgs: [1]);
-
-    List<Client> list =
-        res.isNotEmpty ? res.map((c) => Client.fromMap(c)).toList() : [];
-    return list;
-  }
-
-  Future<List<Client>> getAllClients() async {
-    final db = await database;
-    var res = await db.query("Client");
+    var res = await db.query("Survey");
     List<Client> list =
         res.isNotEmpty ? res.map((c) => Client.fromMap(c)).toList() : [];
     return list;
@@ -483,18 +457,15 @@ class DBProvider {
 
   deleteClient(int id) async {
     final db = await database;
-    return db.delete("Client", where: "id = ?", whereArgs: [id]);
+    return db.delete("Survey", where: "id = ?", whereArgs: [id]);
   }
 
   deleteAll() async {
     //String table = "API_Data";
-    
+
     final db = await database;
-    var batch = db.batch();
-    
-   // String dropQuery = "DROP TABLE IF EXISTS " + Constants.API_Data;
-    //String deleteQuery = DELETE FROM IF EXISTS API_Data
-    
+    //Batch batch = db.batch();
+
     await db.rawDelete("DELETE FROM API_Data");
     await db.rawDelete("DELETE FROM Choices");
     await db.rawDelete("DELETE FROM FieldsProperties");
@@ -506,9 +477,9 @@ class DBProvider {
     await db.rawDelete('DELETE FROM Validations');
     await db.rawDelete('DELETE FROM Welcome');
     await db.rawDelete('DELETE FROM WelcomeProperties');
-    
-   //await batch.rawDelete("DELETE FROM IF EXISTS API_Data");
-     /*  await batch.rawDelete("DROP TABLE IF EXISTS",[Constants.API_Data,Constants.Choices,Constants.FieldsProperties,Constants.Settings,Constants.ThankYou,Constants.ThankYouAttachment,Constants.ThankYouProperties,Constants.Validations,Constants.Welcome,Constants.WelcomeProperties]); */
-  // return resp;
+
+    //await batch.rawDelete("DELETE FROM IF EXISTS API_Data");
+    /*  await batch.rawDelete("DROP TABLE IF EXISTS",[Constants.API_Data,Constants.Choices,Constants.FieldsProperties,Constants.Settings,Constants.ThankYou,Constants.ThankYouAttachment,Constants.ThankYouProperties,Constants.Validations,Constants.Welcome,Constants.WelcomeProperties]); */
+    // return resp;
   }
 }

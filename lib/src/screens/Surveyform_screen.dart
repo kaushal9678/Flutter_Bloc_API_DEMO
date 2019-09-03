@@ -68,7 +68,7 @@ class _SurveyFormState extends State<SurveyForm> {
     super.initState();
   }
 
-  void _submitted() {
+  void _submitted(BuildContext ctx) {
     if (_userNameController.text.isEmpty) {
       Fluttertoast.showToast(
           msg: 'Please enter name !',
@@ -93,11 +93,11 @@ class _SurveyFormState extends State<SurveyForm> {
       Fluttertoast.showToast(
           msg: 'Please provide rating !', toastLength: Toast.LENGTH_SHORT);
     } else {
-      this._insert();
+      this._insert(ctx);
     }
   }
 
-  void _insert() async {
+  void _insert(BuildContext ctx) async {
     // row to insert
 
     switch (_radioValue1) {
@@ -123,6 +123,11 @@ class _SurveyFormState extends State<SurveyForm> {
         ratings: _userRating.toString(),
         revisit: _radioAgainExplore == 1 ? true : false);
     var saved = await DBProvider.db.newClient(client);
+    print('saved==${saved}');
+    if (saved > 0) {
+      // Navigator.pushNamed(ctx, '/thankyou');
+      _onPressNext(ctx);
+    }
   }
 
   void _onPressNext(BuildContext ctx) {
@@ -136,12 +141,6 @@ class _SurveyFormState extends State<SurveyForm> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Survey Form"),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () => _onPressNext(context),
-          )
-        ],
       ),
       body: Card(
         child: SingleChildScrollView(
@@ -154,7 +153,7 @@ class _SurveyFormState extends State<SurveyForm> {
                 TextField(
                   decoration: InputDecoration(labelText: 'Enter your name'),
                   controller: _userNameController,
-                  onSubmitted: (_) => _submitted(),
+                  onSubmitted: (_) => _submitted(context),
                   /* onChanged: (val) {
                           titleInput = val;
                         } */
@@ -163,7 +162,7 @@ class _SurveyFormState extends State<SurveyForm> {
                   decoration: InputDecoration(labelText: 'Enter your age'),
                   keyboardType: TextInputType.number,
                   controller: _userAgeController,
-                  onSubmitted: (_) => _submitted(),
+                  onSubmitted: (_) => _submitted(context),
                   /* onChanged: (val) {
                           amountInput = val;
                         }, */
@@ -172,7 +171,7 @@ class _SurveyFormState extends State<SurveyForm> {
                   decoration: InputDecoration(labelText: 'Enter your email'),
                   keyboardType: TextInputType.emailAddress,
                   controller: _emailAddressController,
-                  onSubmitted: (_) => _submitted(),
+                  onSubmitted: (_) => _submitted(context),
                   /* onChanged: (val) {
                           amountInput = val;
                         }, */
@@ -182,7 +181,7 @@ class _SurveyFormState extends State<SurveyForm> {
                       InputDecoration(labelText: 'Enter your phone number'),
                   keyboardType: TextInputType.phone,
                   controller: _phoneNumberController,
-                  onSubmitted: (_) => _submitted(),
+                  onSubmitted: (_) => _submitted(context),
                 ),
                 SizedBox(
                   height: 20,
@@ -343,7 +342,7 @@ class _SurveyFormState extends State<SurveyForm> {
                 RaisedButton(
                   child: Text('Submit'),
                   onPressed: () {
-                    this._submitted();
+                    this._submitted(context);
                   },
                   color: Theme.of(context).primaryColor,
                   textColor: Theme.of(context).textTheme.button.color,

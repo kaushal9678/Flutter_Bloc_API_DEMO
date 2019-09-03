@@ -25,7 +25,8 @@ class ThankyouScreen extends StatelessWidget {
             RaisedButton(
               child: Text('Again'),
               onPressed: () {
-                // this._submitted();
+                Navigator.popUntil(context, ModalRoute.withName(Navigator.defaultRouteName));
+
               },
               color: Theme.of(context).primaryColor,
               textColor: Theme.of(context).textTheme.button.color,
@@ -44,8 +45,8 @@ class ThankyouScreen extends StatelessWidget {
               child: Text('Create a form'),
               onPressed: () {
                 // this._submitted();
-              // Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (Route<dynamic> route) => false);
-              Navigator.of(context).pushNamedAndRemoveUntil('/survey-form', ModalRoute.withName('/welcome'));
+
+              Navigator.popUntil(context, ModalRoute.withName(Navigator.defaultRouteName));
               },
               color: Theme.of(context).primaryColor,
               textColor: Theme.of(context).textTheme.button.color,

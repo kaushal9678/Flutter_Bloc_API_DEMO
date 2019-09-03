@@ -11,13 +11,11 @@ class APIBloc {
   fetchApiData() async {
     APIModel itemModel = await _repository.fetchAPIList();
       var res = await DBProvider.db.deleteAll();
-      print('res=${res}');
       await DBProvider.db.newAPIModel(itemModel);
-     // print('saved==${saved}');
     _apiFetcher.sink.add(itemModel);
 
-    var setting = await DBProvider.db.getSettings();
-    print('settings==${setting}');
+    //var setting = await DBProvider.db.getSettings();
+   // print('settings==${setting}');
   }
 
   dispose() {
